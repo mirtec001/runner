@@ -142,7 +142,7 @@ class MyGame(arcade.View):
 
         arcade.draw_text(
             f"Distance Remaining: {self.level_size - (self.player_sprite.center_x + 32)}",
-            SCREEN_WIDTH - 500,
+            SCREEN_WIDTH - 350,
             10,
             arcade.color.WHITE,
             18
