@@ -1,3 +1,4 @@
+from asyncio import AbstractChildWatcher
 import random
 import arcade
 
@@ -13,10 +14,29 @@ PLAYER_JUMP_SPEED = 17
 GRAVITY = 1
 SPIKE_SCALING = 2
 
+class MainMenu(arcade.View):
 
-class MyGame(arcade.Window):
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.WHITE)
+
+    def on_draw(self):
+        self.clear()
+        arcade.draw_text(
+            "Main Menu - Click to play",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2,
+            arcade.color.BLACK,
+            font_size=30,
+            anchor_x = "center",
+        )
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        game_view = MyGame()
+        self.window.show_view(game_view)
+
+class MyGame(arcade.View):
     def __init__(self):
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        super().__init__()
 
         self.scene = None
 
@@ -29,11 +49,14 @@ class MyGame(arcade.Window):
 
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
+    def on_show_view(self):
+        self.setup()
+
     def setup(self):
         self.scene = arcade.Scene()
 
-        self.camera = arcade.Camera(self.width, self.height)
-        self.gui_camera = arcade.Camera(self.width, self.height)
+        self.camera = arcade.Camera(self.window.width, self.window.height)
+        self.gui_camera = arcade.Camera(self.window.width, self.window.height)
 
         self.scene.add_sprite_list("Player")
         self.scene.add_sprite_list("Platforms", use_spatial_hash=True)
@@ -93,17 +116,14 @@ class MyGame(arcade.Window):
 
         spike_hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.scene["Spikes"])
         for _ in spike_hit_list:
-            self.level = 0
-            self.level_size = 5000
-            self.setup()
+            game_over = GameOver()
+            self.window.show_view(game_over)
 
         exit_hit = arcade.check_for_collision_with_list(self.player_sprite, self.scene["Exit"])
         for _ in exit_hit:
             self.level += 1
             self.level_size += (500 * self.level) 
             self.setup()
-
-        
 
     def on_draw(self):
         self.clear()
@@ -119,6 +139,14 @@ class MyGame(arcade.Window):
             arcade.csscolor.WHITE,
             18
         )
+
+        arcade.draw_text(
+            f"Distance Remaining: {self.level_size - (self.player_sprite.center_x + 32)}",
+            SCREEN_WIDTH - 500,
+            10,
+            arcade.color.WHITE,
+            18
+        )
             
 
     def create_spikes(self, start_point ):
@@ -129,12 +157,32 @@ class MyGame(arcade.Window):
             spike.center_y = 48
             self.scene.add_sprite("Spikes", spike)
 
+class GameOver(arcade.View):
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.RED)
+
+    def on_draw(self):
+        self.clear()
+        arcade.draw_text(
+            "Game Over - Click to restart",
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2,
+            arcade.color.WHITE,
+            30,
+            anchor_x = "center"
+        )
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers):
+        game_view = MyGame()
+        self.window.show_view(game_view)
+
 
 
 
 def main():
-    window = MyGame()
-    window.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    menu_view = MainMenu()
+    window.show_view(menu_view)
 
     arcade.run()
 
